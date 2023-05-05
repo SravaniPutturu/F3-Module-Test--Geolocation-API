@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Getting Clients IP</title>
+    <link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<script src=
+"https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js">
+	</script>
+	
+</head>
+
+<body>	
+	<h1>MY Public IP ADDRESS :</h2>
+    <button type="submit" id="btn" onclick="api()" >Get Data</button>
+    <div id="main">
+        <div id="header">
+            <h2 id="lat"></h2>
+            <h2 id="city"></h2>
+            <h2 id="organisation"></h2>
+            <h2 id="long"></h2>
+            <h2 id="region"></h2>
+            <h2 id="hostname"></h2>
+        </div>
+        <div id="map"></div>
+        <div>
+            <h2 id="timezone"></h2>
+            <h2 id="currTime"></h2>
+            <h2 id="pincode"></h2>
+            <h2 id="message"></h2>
+        </div>
+        <div id="inputDiv"></div>
+        <!-- <input type="text" placeholder="Search" id="search"> -->
+        <div id="postCodes">
+
+        </div>
+    </div>
+</body>
+<script>
+	
+	/* Add "https://api.ipify.org?format=json" statement
+			this will communicate with the ipify servers in
+			order to retrieve the IP address $.getJSON will
+			load JSON-encoded data from the server using a
+			GET HTTP request */
+
+    var ip = "";
+				
+	$.getJSON("https://api.ipify.org?format=json", function(data) {
+		
+        ip =  data.ip
+		// Setting text of element P with id gfg
+		$("#gfg").html(data.ip);
+	})
+
+  var codesArr = [];
+
+   function api() {
+       document.getElementById('btn').style.display = 'none';
+
+       fetch(`https://ipinfo.io/${ip}/geo?token=72c908b798c146`)
+        .then((res)=>res.json())
+        .then(data=>{
+            console.log(data)
+            var latLongArr = data.loc.split(',')
+            
+            document.getElementById('lat').innerText = `Lat:${latLongArr[0]}`
+            document.getElementById('city').innerText = `City:${data.city}`
+            document.getElementById('organisation').innerText = `Organisation:${data.org}`
+            document.getElementById('long').innerText = `Long:${latLongArr[1]}`
+            document.getElementById('region').innerText = `Region:${data.region}`
+            document.getElementById('hostname').innerText = `Hostname:`
+            
+            document.getElementById('map').innerHTML = `
+
+            <iframe src="https://maps.google.com/maps?q=${latLongArr[0]}, ${latLongArr[1]}&output=embed" width="98%" height="450" frameborder="0" style="border:0"></iframe>   
+             `
+             document.getElementById('timezone').innerText = `Time Zone:${data.timezone}`
+
+             let datetime = new Date().toLocaleString("en-US", { timeZone: data.timezone });
+
+             document.getElementById('currTime').innerText = `Date And Time:${datetime}`
+             document.getElementById('pincode').innerText = `Pincode:${data.postal}`
+
+            
+             document.getElementById('inputDiv').innerHTML = `<input type="text" id="input" onkeyup="filter()" placeholder= "Search" >`
+
+             fetch(`https://api.postalpincode.in/pincode/${data.postal}`)
+             .then(res=>res.json())
+             .then(data=>{
+                document.getElementById('message').innerText = `Message:${data[0].Message}`
+
+                var postCodes = document.getElementById('postCodes')
+
+                codesArr = data[0].PostOffice;
+                codesArr.forEach((code,index) => {
+
+var codes = document.getElementById('postCodes')
+
+ console.log(codesArr)
+codes.innerHTML += `<div id="code">
+        <p>Name : ${codesArr[index].Name}</p>
+        <p>Branch Type : ${codesArr[index].BranchType}</p>
+        <p>Delivery Status : ${codesArr[index].DeliveryStatus}</p>
+        <p>District : ${codesArr[index].District}</p>
+        <p>Division : ${codesArr[index].Division}</p>
+       </div>`              
+                  
+                    
+ });
+            
+                 
+                                
+            })
+
+        })
+
+   }
+
+   function filter(){
+
+    console.log("called")
+    var input = document.querySelector('#input')
+
+     document.querySelectorAll('#code').forEach(code=>{
+      return code.style.display = "none"
+     })
+
+      var filtered = codesArr.filter(code=>code.Name.toLowerCase() == input.value.toLowerCase() || code.District.toLowerCase() == input.value.toLowerCase())
+
+      filtered.forEach((code,index) => {
+
+                var codes = document.getElementById('postCodes')
+
+                codes.innerHTML += `<div id="code">
+                        <p>Name : ${filtered[index].Name}</p>
+                        <p>Branch Type : ${filtered[index].BranchType}</p>
+                        <p>Delivery Status : ${filtered[index].DeliveryStatus}</p>
+                        <p>District : ${filtered[index].District}</p>
+                        <p>Division : ${filtered[index].Division}</p>
+                       </div>`              
+                                  
+                                    
+                 });
+
+                 if(input.value == ""){
+                  document.querySelectorAll('#code').forEach(code=>{
+                  return code.style.display = "block"
+     })
+                 }
+   }
+
+    
+	</script>
+</html>
+
+
+
+ 
+  
